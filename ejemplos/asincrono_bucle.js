@@ -15,7 +15,7 @@ function escribeTras2Segundos(texto, callback) {
 
 function serie(n, funcionALlamar, callback) {
     funcionALlamar('texto' + n, () => {
-        if (n == 0) {
+        if (n === 0) {
             callback()
             return
         }
