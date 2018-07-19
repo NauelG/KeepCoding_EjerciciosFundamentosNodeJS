@@ -16,9 +16,8 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-/*
- Rutas de mi app web
-*/
+
+// Rutas de mi app web
 app.use('/', require('./routes/index'));
 
 
