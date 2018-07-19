@@ -8,14 +8,18 @@ var app = express();
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
-app.set('view engine', 'ejs');
+app.set('view engine', 'html');
+app.engine('html', require('ejs').__express);
 
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Variables globales de template
+app.locals.titulo = 'NodeApi'
 
 // Rutas de mi app web
 app.use('/', require('./routes/index'));
@@ -28,6 +32,13 @@ app.use(function(req, res, next) {
 
 // error handler
 app.use(function(err, req, res, next) {
+    // Error de validación
+    if (err.array) {
+        err.status = 422;
+        const errorInfo = err.array({ onlyFirstError: true })[0];
+        err.message = `Not valid - ${errorInfo.param} ${errorInfo.msg}`;
+    }
+
     // set locals, only providing error in development
     res.locals.message = err.message;
     res.locals.error = req.app.get('env') === 'development' ? err : {};
