@@ -4,6 +4,8 @@ var path = require('path');
 var cookieParser = require('cookie-parser');
 var logger = require('morgan');
 
+const { isAPI } = require('./lib/utils')
+
 var app = express();
 
 // view engine setup
@@ -19,7 +21,14 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Variables globales de template
-app.locals.titulo = 'NodeApi'
+app.locals.titulo = 'NodeApi';
+
+// Conectamos a la base de datos y registramos los modelos
+require('./lib/connectMongoose');
+require('./models/Agente');
+
+// Rutas de mi API
+app.use('/apiv1/agentes', require('./routes/apiv1/agentes'))
 
 // Rutas de mi app web
 app.use('/', require('./routes/index'));
@@ -36,7 +45,15 @@ app.use(function(err, req, res, next) {
     if (err.array) {
         err.status = 422;
         const errorInfo = err.array({ onlyFirstError: true })[0];
-        err.message = `Not valid - ${errorInfo.param} ${errorInfo.msg}`;
+        err.message = isAPI(req) ? { message: 'Not valid', errors: err.mapped() } :
+            `Not valid - ${errorInfo.param} ${errorInfo.msg}`;
+    }
+
+    res.status(err.status || 500);
+
+    if (isAPI(req)) {
+        res.json({ success: false, error: err.message });
+        return;
     }
 
     // set locals, only providing error in development
@@ -44,8 +61,8 @@ app.use(function(err, req, res, next) {
     res.locals.error = req.app.get('env') === 'development' ? err : {};
 
     // render the error page
-    res.status(err.status || 500);
     res.render('error');
 });
+
 
 module.exports = app;
